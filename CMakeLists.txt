@@ -214,4 +214,6 @@ include_directories(
 
 
 add_executable(asmc src/asmc.cpp)
+add_executable(dynamic_model_simulate src/dynamic_model_simulate.cpp)
 target_link_libraries(asmc ${catkin_LIBRARIES})
+target_link_libraries(dynamic_model_simulate ${catkin_LIBRARIES})
