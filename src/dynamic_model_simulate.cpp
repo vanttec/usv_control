@@ -4,7 +4,7 @@
 #include "geometry_msgs/Vector3.h"
 #include "std_msgs/Float64.h"
 #include <math.h>
-#include <Eigen/Dense>
+#include <eigen3/Eigen/Dense>
 
 using namespace std;
 using namespace Eigen;
