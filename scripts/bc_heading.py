@@ -54,18 +54,18 @@ class Controller:
         self.T_stbd = 0 #Thrust in Newtons
 
 #Desired values subscribers
-        rospy.Subscriber("desired_heading", Float64, self.dheading_callback)
-        rospy.Subscriber("desired_thrust", Float64, self.dthrust_callback)
+        rospy.Subscriber("/guidance/desired_heading", Float64, self.dheading_callback)
+        rospy.Subscriber("/guidance/desired_thrust", Float64, self.dthrust_callback)
 
 #IMU data subscribers
-        rospy.Subscriber("local_vel", Vector3, self.local_vel_callback)
-        rospy.Subscriber("ins_pose", Pose2D, self.ins_pose_callback)
+        rospy.Subscriber("/vectornav/ins_2d/local_vel", Vector3, self.local_vel_callback)
+        rospy.Subscriber("/vectornav/ins_2d/ins_pose", Pose2D, self.ins_pose_callback)
 
 #Thruster data publishers
-        self.right_thruster_pub = rospy.Publisher("right_thruster", Float64, queue_size=10)
-        self.left_thruster_pub = rospy.Publisher("left_thruster", Float64, queue_size=10)
+        self.right_thruster_pub = rospy.Publisher("/usv_control/controller/right_thruster", Float64, queue_size=10)
+        self.left_thruster_pub = rospy.Publisher("/usv_control/controller/left_thruster", Float64, queue_size=10)
 
-        self.psi_error_pub = rospy.Publisher("psi_error", Float64, queue_size=10)
+        self.psi_error_pub = rospy.Publisher("/usv_control/bc_h/heading_error", Float64, queue_size=10)
 
     def dheading_callback(self, d_heading):
         self.psi_d = d_heading.data

@@ -67,13 +67,13 @@ int main(int argc, char *argv[])
 
   	ros::NodeHandle n;
 
-	//ROS Publishers for each required sensor data
-	ros::Publisher dm_pos_pub = n.advertise<geometry_msgs::Pose2D>("ins_pose", 1000);
-	ros::Publisher local_pos_pub = n.advertise<geometry_msgs::Pose2D>("NED_pose", 1000);
-	ros::Publisher dm_vel_pub = n.advertise<geometry_msgs::Vector3>("local_vel", 1000);
+	//ROS Publishers for each required simulated ins_2d data
+	ros::Publisher dm_pos_pub = n.advertise<geometry_msgs::Pose2D>("/vectornav/ins_2d/ins_pose", 1000);
+	ros::Publisher local_pos_pub = n.advertise<geometry_msgs::Pose2D>("/vectornav/ins_2d/NED_pose", 1000);
+	ros::Publisher dm_vel_pub = n.advertise<geometry_msgs::Vector3>("/vectornav/ins_2d/local_vel", 1000);
 
-	ros::Subscriber right_thruster_sub = n.subscribe("right_thruster", 1000, right_callback);
-	ros::Subscriber left_thruster_sub = n.subscribe("left_thruster", 1000, left_callback);
+	ros::Subscriber right_thruster_sub = n.subscribe("/usv_control/controller/right_thruster", 1000, right_callback);
+	ros::Subscriber left_thruster_sub = n.subscribe("/usv_control/controller/left_thruster", 1000, left_callback);
 	//ros::Subscriber ins_pose_sub = n.subscribe("ins_pose", 1000, ins_callback);
 	//ros::Subscriber local_vel_sub = n.subscribe("local_vel", 1000, vel_callback);
 

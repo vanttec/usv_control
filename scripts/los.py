@@ -8,8 +8,6 @@ from std_msgs.msg import Float64
 from geometry_msgs.msg import Pose2D
 from std_msgs.msg import Float32MultiArray
 
-#Constant Speed and Constant Heading
-#0.5 m/s (until short distance) and GPS bearing rads
 class Test:
     def __init__(self):
         self.testing = True
@@ -35,13 +33,13 @@ class Test:
         self.Waypointpath = Pose2D()
         self.LOSpath = Pose2D()
 
-        rospy.Subscriber("NED_pose", Pose2D, self.gps_callback)
-        rospy.Subscriber("waypoints", Float32MultiArray, self.waypoints_callback)
+        rospy.Subscriber("/vectornav/ins_2d/NED_pose", Pose2D, self.gps_callback)
+        rospy.Subscriber("/mission/waypoints", Float32MultiArray, self.waypoints_callback)
 
-        self.d_speed_pub = rospy.Publisher("desired_speed", Float64, queue_size=10)
-        self.d_heading_pub = rospy.Publisher("desired_heading", Float64, queue_size=10)
-        self.target_pub = rospy.Publisher("target", Pose2D, queue_size=10)
-        self.LOS_pub = rospy.Publisher("LOS", Pose2D, queue_size=10)
+        self.d_speed_pub = rospy.Publisher("/guidance/desired_speed", Float64, queue_size=10)
+        self.d_heading_pub = rospy.Publisher("/guidance/desired_heading", Float64, queue_size=10)
+        self.target_pub = rospy.Publisher("/usv_control/los/target", Pose2D, queue_size=10)
+        self.LOS_pub = rospy.Publisher("/usv_control/los/los", Pose2D, queue_size=10)
 
     def gps_callback(self, gps):
         self.NEDx = gps.x
@@ -105,7 +103,7 @@ class Test:
         self.d_speed_pub.publish(self.ds)
 
 def main():
-    rospy.init_node('LOS2sh', anonymous=True)
+    rospy.init_node('los', anonymous=True)
     rate = rospy.Rate(100) # 100hz
     t = Test()
     t.wp_t = []
