@@ -6,6 +6,7 @@ import rospy
 import math
 import numpy as np
 from std_msgs.msg import Float64
+from std_msgs.msg import String
 from geometry_msgs.msg import Pose2D
 from geometry_msgs.msg import Vector3
 from std_msgs.msg import Float32MultiArray
@@ -23,8 +24,16 @@ class Test:
         self.NEDy = 0
         self.yaw = 0
 
+        #self.lat = 0
+        #self.lon = 0
+
         self.latref = 0
         self.lonref = 0
+        #self.altref = 0
+
+        #self.ecefxref = 0
+        #self.ecefyref = 0
+        #self.ecefzref = 0
 
         self.wp_array = []
         self.wp_t = []
@@ -38,25 +47,45 @@ class Test:
         self.Waypointpath = Pose2D()
         self.LOSpath = Pose2D()
 
+        self.obstacle_view = "000"
+
         self.waypoint_mode = 0 # 0 for NED, 1 for GPS, 2 for body
 
-        rospy.Subscriber("/vectornav/ins_2d/NED_pose", Pose2D, self.gps_callback)
+        #self.Rne = np.zeros((3, 3), dtype=np.float)
+        #self.Rea = 6378137
+        #self.e = 0.08181919
+        #self.Pe_ref = np.zeros((3,1), dtype=np.float)
+
+        rospy.Subscriber("/vectornav/ins_2d/NED_pose", Pose2D, self.ned_callback)
+        #rospy.Subscriber("/vectornav/ins_2d/ins_pose", Pose2D, self.gps_callback)
         rospy.Subscriber("/vectornav/ins_2d/ins_ref", Vector3, self.gpsref_callback)
+        #rospy.Subscriber("/vectornav/ins_2d/ecef_ref", Vector3, self.ecefref_callback)
         rospy.Subscriber("/mission/waypoints", Float32MultiArray, self.waypoints_callback)
+        rospy.Subscriber("/usv_perception/lidar_detector/obstacles",  String, self.obstacles_callback)
 
         self.d_speed_pub = rospy.Publisher("/guidance/desired_speed", Float64, queue_size=10)
         self.d_heading_pub = rospy.Publisher("/guidance/desired_heading", Float64, queue_size=10)
         self.target_pub = rospy.Publisher("/usv_control/los/target", Pose2D, queue_size=10)
         self.LOS_pub = rospy.Publisher("/usv_control/los/los", Pose2D, queue_size=10)
 
-    def gps_callback(self, gps):
-        self.NEDx = gps.x
-        self.NEDy = gps.y
-        self.yaw = gps.theta
+    def ned_callback(self, ned):
+        self.NEDx = ned.x
+        self.NEDy = ned.y
+        self.yaw = ned.theta
+
+    '''def gps_callback(self, gps):
+        self.lat = gps.x
+        self.lon = gps.y'''
 
     def gpsref_callback(self, gps):
         self.latref = gps.x
         self.lonref = gps.y
+        #self.altref = gps.z
+
+    '''def ecefref_callback(self, ecef):
+        self.ecefxref = ecef.x
+        self.ecefyref = ecef.y
+        self.ecefzref = ecef.z'''
 
     def waypoints_callback(self, msg):
         wp = []
@@ -64,8 +93,11 @@ class Test:
 
         for i in range(int(leng)-1):
             wp.append(msg.data[i])
-        self.waypoint_mode = msg.data[-1] # 0 for NED, 1 for GPS, 2 for body
+        self.waypoint_mode = msg.data[-1]
         self.wp_array = wp
+
+    def obstacles_callback(self, data):
+        self.obstacle_view = data.data
 
     def LOSloop(self, listvar):
         if self.k < len(listvar)/2:
@@ -90,12 +122,12 @@ class Test:
         ak = math.atan2(y2-y1,x2-x1)
         ye = -(self.NEDx - x1)*math.sin(ak) + (self.NEDy - y1)*math.cos(ak)
         xe = (self.NEDx - x1)*math.cos(ak) + (self.NEDy - y1)*math.sin(ak)
-        delta = (self.dmax - self.dmin)*math.exp(-(1/self.gamma)*math.fabs(ye)) + self.dmin
+        delta = (self.dmax - self.dmin)*math.exp(-(1/self.gamma)*abs(ye)) + self.dmin
         psi_r = math.atan(-ye/delta)
         self.bearing = ak + psi_r
 
-        if (math.fabs(self.bearing) > (math.pi)):
-            self.bearing = (self.bearing/math.fabs(self.bearing))*(math.fabs(self.bearing)-2*math.pi)
+        if (abs(self.bearing) > (math.pi)):
+            self.bearing = (self.bearing/abs(self.bearing))*(abs(self.bearing)-2*math.pi)
 
         xlos = x1 + (delta+xe)*math.cos(ak)
         ylos = y1 + (delta+xe)*math.sin(ak)
@@ -105,9 +137,63 @@ class Test:
 
         self.vel = 1
         if self.distance < 6:
-            self.vel = 0.4
+            self.vel = 0.6
+
+        self.avoid(self.obstacle_view)
+
+    def avoid(self, segment):
+
+        #left, center, right
+        cl = segment[0]
+        cl = int(cl)
+        if cl > 0:
+            cl = -5
+        left = cl
+
+        cc = segment[1]
+        cc = int(cc)
+        if cc > 0:
+            cc = 1
+        center = cc
+
+        cr = segment[2]
+        cr = int(cr)
+        if cr > 0:
+            cr = 3
+        right = cr
+
+        addition = left + center + right 
+
+        if center == 0:
+            self.vel = self.vel
+
+        elif addition == -1 or addition == 1:
+                self.vel = -0.4
+
+        elif addition != 0:
+            self.bearing = self.yaw + addition * 0.17
+            if (abs(self.bearing) > (math.pi)):
+                self.bearing = (self.bearing/abs(self.bearing))*(abs(self.bearing)-2*math.pi)
 
         self.desired(self.vel, self.bearing)
+
+    '''
+    def gps_to_ecef_to_ned(self, lat, lon):
+        self.Rne = np.array([[-math.sin(self.latref) * math.cos(self.lonref), -math.sin(self.latref) * math.sin(self.lonref), math.cos(self.latref)],
+                    [-math.sin(self.lonref), math.cos(self.lonref), 0],
+                    [-math.cos(self.latref) * math.cos(self.lonref), -math.cos(self.latref) * math.sin(self.lonref), -math.sin(self.latref)]])
+        self.Pe_ref = np.array([[self.ecefxref], [self.ecefyref], [self.ecefzref]])
+        _ne = 1 - (self.e**2)*math.pow(math.sin(lat),2)
+        Ne = self.Rea/(math.pow(_ne, 0.5))
+        xe = (Ne + self.altref)*math.cos(lat)*math.cos(lon)
+        ye = (Ne + self.altref)*math.cos(lat)*math.sin(lon)
+        ze = (Ne*(1-self.e**2) + self.altref)*math.sin(lat)
+        Pe = np.array([[xe],[ye],[ze]])
+        Pn = np.matmul(self.Rne, Pe - self.Pe_ref)
+        nedx = Pn[0]
+        nedy = Pn[1]
+
+        return (nedx,nedy)'''
 
     def gps_to_ned(self, lat2, lon2):
         lat1 = self.latref
@@ -147,7 +233,7 @@ class Test:
         self.d_speed_pub.publish(self.ds)
 
 def main():
-    rospy.init_node('los', anonymous=True)
+    rospy.init_node('los_avoidance', anonymous=True)
     rate = rospy.Rate(100) # 100hz
     t = Test()
     t.wp_t = []
