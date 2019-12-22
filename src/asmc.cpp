@@ -123,8 +123,7 @@ int main(int argc, char *argv[])
   float miu_psi;
   float lambda_u;
   float lambda_psi;
-  float lambda_psi_i;
-  
+
   n.getParam("/asmc/k_u", k_u);
   n.getParam("/asmc/k_psi", k_psi);
   n.getParam("/asmc/kmin_u", kmin_u);
@@ -135,8 +134,7 @@ int main(int argc, char *argv[])
   n.getParam("/asmc/mu_psi", miu_psi);
   n.getParam("/asmc/lambda_u", lambda_u);
   n.getParam("/asmc/lambda_psi", lambda_psi);
-  n.getParam("/asmc/lambda_psi_i", lambda_psi_i);
-  
+
   float Tx = 0;
   float Tz = 0;
   float Ka_u = 0;
@@ -188,11 +186,11 @@ int main(int argc, char *argv[])
     e_psi_last = e_psi;
 
     float sigma_u = e_u + lambda_u * e_u_int;
-    float sigma_psi = e_psi_dot + lambda_psi * e_psi + lambda_psi_i * e_psi_int;
-    
+    float sigma_psi = e_psi_dot + lambda_psi * e_psi;
+
     float sigma_u_abs = abs(sigma_u);
     float sigma_psi_abs = abs(sigma_psi);
-    
+
     int sign_u_sm = 0;
     int sign_psi_sm = 0;
 
