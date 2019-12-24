@@ -90,12 +90,12 @@ class Test:
         ak = math.atan2(y2-y1,x2-x1)
         ye = -(self.NEDx - x1)*math.sin(ak) + (self.NEDy - y1)*math.cos(ak)
         xe = (self.NEDx - x1)*math.cos(ak) + (self.NEDy - y1)*math.sin(ak)
-        delta = (self.dmax - self.dmin)*math.exp(-(1/self.gamma)*math.fabs(ye)) + self.dmin
+        delta = (self.dmax - self.dmin)*math.exp(-(1/self.gamma)*abs(ye)) + self.dmin
         psi_r = math.atan(-ye/delta)
         self.bearing = ak + psi_r
 
-        if (math.fabs(self.bearing) > (math.pi)):
-            self.bearing = (self.bearing/math.fabs(self.bearing))*(math.fabs(self.bearing)-2*math.pi)
+        if (abs(self.bearing) > (math.pi)):
+            self.bearing = (self.bearing/abs(self.bearing))*(abs(self.bearing)-2*math.pi)
 
         xlos = x1 + (delta+xe)*math.cos(ak)
         ylos = y1 + (delta+xe)*math.sin(ak)
