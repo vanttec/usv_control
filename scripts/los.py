@@ -79,7 +79,7 @@ class Test:
             xpow = math.pow(x2 - self.NEDx, 2)
             ypow = math.pow(y2 - self.NEDy, 2)
             self.distance = math.pow(xpow + ypow, 0.5)
-            if self.distance > 2:
+            if self.distance > 1:
                 self.LOS(x1, y1, x2, y2)
             else:
                 self.k += 1
