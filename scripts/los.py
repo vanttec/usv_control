@@ -41,7 +41,7 @@ class Test:
         self.waypoint_mode = 0 # 0 for NED, 1 for GPS, 2 for body
 
         rospy.Subscriber("/vectornav/ins_2d/NED_pose", Pose2D, self.gps_callback)
-        rospy.Subscriber("/vectornav/ins_2d/ins_ref", Vector3, self.gpsref_callback)
+        rospy.Subscriber("/vectornav/ins_2d/ins_ref", Pose2D, self.gpsref_callback)
         rospy.Subscriber("/mission/waypoints", Float32MultiArray, self.waypoints_callback)
 
         self.d_speed_pub = rospy.Publisher("/guidance/desired_speed", Float64, queue_size=10)
